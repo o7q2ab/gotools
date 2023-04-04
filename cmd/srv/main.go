@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -22,13 +23,28 @@ func main() {
 	fmt.Println(italic(fmt.Sprintf("Listening on port %s.", port)))
 	if err := http.ListenAndServe(":"+port, http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Println(
-				now(),
-				"[", r.RemoteAddr, "]",
-				bold(r.Method),
-				r.RequestURI,
-			)
-			w.WriteHeader(http.StatusOK)
+			defer w.WriteHeader(http.StatusOK)
+
+			body, err := io.ReadAll(r.Body)
+			if err != nil {
+				fmt.Println(now(), "reading request body failed", err)
+			}
+			if len(body) != 0 {
+				fmt.Printf("%s [ %s ] %s %s\n\tbody: %s\n",
+					now(),
+					r.RemoteAddr,
+					bold(r.Method),
+					r.RequestURI,
+					string(body),
+				)
+			} else {
+				fmt.Println(
+					now(),
+					"[", r.RemoteAddr, "]",
+					bold(r.Method),
+					r.RequestURI,
+				)
+			}
 		},
 	)); err != nil {
 		fmt.Printf("ListenAndServe: %v\n", err)
