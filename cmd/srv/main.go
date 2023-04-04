@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 func main() {
@@ -18,13 +19,22 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Listening on port %s.\n", port)
+	fmt.Println(italic(fmt.Sprintf("Listening on port %s.", port)))
 	if err := http.ListenAndServe(":"+port, http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Println(r.Method, r.RequestURI)
+			fmt.Println(
+				now(),
+				"[", r.RemoteAddr, "]",
+				bold(r.Method),
+				r.RequestURI,
+			)
 			w.WriteHeader(http.StatusOK)
 		},
 	)); err != nil {
 		fmt.Printf("ListenAndServe: %v\n", err)
 	}
 }
+
+func now() string            { return time.Now().Format("15:04:05.000") }
+func bold(s string) string   { return "\x1b[1m" + s + "\x1b[0m" }
+func italic(s string) string { return "\x1b[3m" + s + "\x1b[0m" }
