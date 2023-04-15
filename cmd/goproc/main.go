@@ -26,12 +26,15 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	skipped := 0
-	readLinkFailed := 0
-	notGo := 0
+
+	skipped, readLinkFailed, notGo := 0, 0, 0
+
 	w := tabwriter.NewWriter(os.Stdout, 3, 0, 1, ' ', 0)
-	fmt.Fprintf(w, "PID\t| Go version\t| # Deps\t| Path\t| Module\n")
-	fmt.Fprintf(w, "---\t| ----------\t| ------\t| ----\t| ------\n")
+	row := func(format string, a ...any) { fmt.Fprintf(w, format, a...) }
+
+	row("PID\t| Go version\t| # Deps\t| Path\t| Module\n")
+	row("---\t| ----------\t| ------\t| ----\t| ------\n")
+
 	for i := range dirs {
 		pid, err := strconv.Atoi(dirs[i])
 		if err != nil {
@@ -49,7 +52,7 @@ func run() error {
 			continue
 		}
 
-		fmt.Fprintf(w, "%d\t| %s\t| %d\t| %s\t| %s %s\n",
+		row("%d\t| %s\t| %d\t| %s\t| %s %s\n",
 			pid, info.GoVersion, len(info.Deps), string(path), info.Main.Path, info.Main.Version)
 	}
 	w.Flush()
