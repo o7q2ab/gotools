@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"text/tabwriter"
 )
 
 func main() {
@@ -33,6 +34,9 @@ func run() error {
 	skipped := 0
 	readLinkFailed := 0
 	notGo := 0
+	w := tabwriter.NewWriter(os.Stdout, 3, 0, 1, ' ', 0)
+	fmt.Fprintf(w, "[PID]\t| Go version\t| # Deps\t| Path\t| Mod\n")
+	fmt.Fprintf(w, "-----\t| ----------\t| ------\t| ----\t| ---\n")
 	for i := range dirs {
 		pid, err := strconv.Atoi(dirs[i])
 		if err != nil {
@@ -50,9 +54,11 @@ func run() error {
 			continue
 		}
 
-		fmt.Printf("[%d]\t%s | deps: %d\t| %s\n", pid, info.GoVersion, len(info.Deps), string(path))
+		fmt.Fprintf(w, "[%d]\t| %s\t| %d\t| %s\t| %s %s\n",
+			pid, info.GoVersion, len(info.Deps), string(path), info.Main.Path, info.Main.Version)
 	}
-	fmt.Println("---")
+	w.Flush()
+	fmt.Println("-------------")
 	fmt.Printf("Total: %d, skipped: %d, read link failed: %d, not Go: %d\n", len(dirs), skipped, readLinkFailed, notGo)
 	return nil
 }
