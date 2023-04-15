@@ -22,12 +22,7 @@ func main() {
 }
 
 func run() error {
-	procDir, err := os.Open("/proc")
-	if err != nil {
-		return fmt.Errorf("open '/proc' failed: %v", err)
-	}
-	defer procDir.Close()
-	dirs, err := procDir.Readdirnames(-1)
+	dirs, err := procDirs()
 	if err != nil {
 		return err
 	}
@@ -61,4 +56,13 @@ func run() error {
 	fmt.Println("-------------")
 	fmt.Printf("Total: %d, skipped: %d, read link failed: %d, not Go: %d\n", len(dirs), skipped, readLinkFailed, notGo)
 	return nil
+}
+
+func procDirs() ([]string, error) {
+	d, err := os.Open("/proc")
+	if err != nil {
+		return nil, err
+	}
+	defer d.Close()
+	return d.Readdirnames(-1)
 }
