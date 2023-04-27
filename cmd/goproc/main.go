@@ -6,7 +6,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
-	"text/tabwriter"
+	"strings"
 )
 
 func main() {
@@ -27,37 +27,9 @@ func run() error {
 		return err
 	}
 
-	skipped, readLinkFailed, notGo := 0, 0, 0
-
-	w := tabwriter.NewWriter(os.Stdout, 3, 0, 1, ' ', 0)
-	row := func(format string, a ...any) { fmt.Fprintf(w, format, a...) }
-
-	row("PID\t| Go version\t| # Deps\t| Path\t| Module\n")
-	row("---\t| ----------\t| ------\t| ----\t| ------\n")
-
-	for i := range dirs {
-		pid, err := strconv.Atoi(dirs[i])
-		if err != nil {
-			skipped++
-			continue
-		}
-		path, err := os.Readlink("/proc/" + dirs[i] + "/exe")
-		if err != nil {
-			readLinkFailed++
-			continue
-		}
-		info, err := buildinfo.ReadFile(path)
-		if err != nil {
-			notGo++
-			continue
-		}
-
-		row("%d\t| %s\t| %d\t| %s\t| %s %s\n",
-			pid, info.GoVersion, len(info.Deps), string(path), info.Main.Path, info.Main.Version)
-	}
-	w.Flush()
-	fmt.Println("-------------")
-	fmt.Printf("Total: %d, skipped: %d, read link failed: %d, not Go: %d\n", len(dirs), skipped, readLinkFailed, notGo)
+	infs := rows(dirs)
+	res := strings.Join(infs, "\n")
+	fmt.Println(res)
 	return nil
 }
 
@@ -68,4 +40,94 @@ func procDirs() ([]string, error) {
 	}
 	defer d.Close()
 	return d.Readdirnames(-1)
+}
+
+func rows(dirs []string) []string {
+	pids := []string{"PID"}
+	govs := []string{"Go version"}
+	deps := []string{"# Deps"}
+	pths := []string{"Path"}
+	mods := []string{"Module"}
+
+	for i := range dirs {
+		_, err := strconv.Atoi(dirs[i])
+		if err != nil {
+			continue
+		}
+		path, err := os.Readlink("/proc/" + dirs[i] + "/exe")
+		if err != nil {
+			continue
+		}
+		info, err := buildinfo.ReadFile(path)
+		if err != nil {
+			continue
+		}
+
+		pids = append(pids, dirs[i])
+		govs = append(govs, info.GoVersion)
+		deps = append(deps, strconv.Itoa(len(info.Deps)))
+		pths = append(pths, path)
+		mods = append(mods, fmt.Sprintf("%s %s", info.Main.Path, info.Main.Version))
+	}
+
+	if len(pids) == 0 {
+		return []string{}
+	}
+
+	alignr(pids)
+	alignr(govs)
+	alignr(deps)
+	alignl(pths)
+	alignl(mods)
+
+	infs := make([]string, len(pids))
+
+	for i := range pids {
+		infs[i] = fmt.Sprintf(
+			"%s | %s | %s | %s | %s ",
+			pids[i], govs[i], deps[i], pths[i], mods[i],
+		)
+	}
+
+	return infs
+}
+
+func alignr(in []string) {
+	longest := len(in[0])
+	for i := 1; i < len(in); i++ {
+		if len(in[i]) > longest {
+			longest = len(in[i])
+		}
+	}
+
+	diff := 0
+	for i := range in {
+		diff = longest - len(in[i])
+		if diff == 0 {
+			continue
+		}
+		for j := 0; j < diff; j++ {
+			in[i] = " " + in[i]
+		}
+	}
+}
+
+func alignl(in []string) {
+	longest := len(in[0])
+	for i := 1; i < len(in); i++ {
+		if len(in[i]) > longest {
+			longest = len(in[i])
+		}
+	}
+
+	diff := 0
+	for i := range in {
+		diff = longest - len(in[i])
+		if diff == 0 {
+			continue
+		}
+		for j := 0; j < diff; j++ {
+			in[i] += " "
+		}
+	}
 }
