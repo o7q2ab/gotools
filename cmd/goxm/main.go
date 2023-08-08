@@ -9,7 +9,8 @@ import (
 const header = `%s
 
   - Package: %s
-  - Module:  %s %s (%s)
+  - Module:  %s %s
+             %s
   - Version: %s
   - Size:    %d bytes
   - Mode:    %s
