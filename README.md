@@ -1,6 +1,6 @@
 # gotools
 
-## HTTP server
+## gosrv: HTTP server
 
 ### Install
 
@@ -14,7 +14,7 @@ go install github.com/o7q2ab/gotools/cmd/gosrv@latest
 gosrv 8888
 ```
 
-## Go processes searcher
+## goproc: Go processes searcher
 
 ### Install
 
@@ -28,7 +28,7 @@ go install github.com/o7q2ab/gotools/cmd/goproc@latest
 goproc
 ```
 
-## Go binaries info
+## goxm: Go binaries info
 
 ### Install
 
@@ -40,4 +40,18 @@ go install github.com/o7q2ab/gotools/cmd/goxm@latest
 
 ```sh
 goxm ~/go/bin/gopls
+```
+
+## gosignal: Handle Ctrl+C
+
+### Install
+
+```sh
+go install github.com/o7q2ab/gotools/cmd/gosignal@latest
+```
+
+### Use
+
+```sh
+gosignal
 ```
